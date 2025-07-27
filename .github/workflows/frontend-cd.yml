@@ -150,7 +150,6 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           cd starter/frontend/k8s && aws eks update-kubeconfig --name cluster
-          kubectl config view
           kustomize edit set image frontend=431904867259.dkr.ecr.us-east-1.amazonaws.com/frontend:$IMAGE_TAG
           kustomize build | kubectl apply -f -
           echo "Docker image is deployed into EKS successfully."
