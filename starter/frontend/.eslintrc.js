@@ -28,6 +28,8 @@ module.exports = {
           jsxSingleQuote: false,
           printWidth: 120,
           parser: 'babel-ts',
+          tabWidth: 4,
+          useTabs: false,
         },
       ],
       // Customize your rules here
