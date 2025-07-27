@@ -138,6 +138,11 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Setup Kustomize
+        uses: multani/action-setup-kustomize@v1
+        with:
+          version: 5.0.0
+
       - name: Deploy image to EKS
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
