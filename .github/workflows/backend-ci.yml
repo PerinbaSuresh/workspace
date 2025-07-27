@@ -29,6 +29,9 @@ jobs:
           cache: 'pipenv'
           cache-dependency-path: 'starter/backend/Pipfile.lock'
 
+      - name: Install Pipenv
+        run: cd starter/backend && pip install pipenv
+
       # Install the dependencies.
       - run: cd starter/backend && pipenv install
 
@@ -56,6 +59,9 @@ jobs:
           cache: 'pipenv'
           cache-dependency-path: 'starter/backend/Pipfile.lock'
 
+      - name: Install Pipenv
+        run: cd starter/backend && pip install pipenv
+
       # Install the dependencies.
       - run: cd starter/backend && pipenv install
 
@@ -81,6 +87,9 @@ jobs:
           python-version: ${{env.PYTHON_VERSION}}
           cache: 'pipenv'
           cache-dependency-path: 'starter/backend/Pipfile.lock'
+
+      - name: Install Pipenv
+        run: cd starter/backend && pip install pipenv
 
       # Install the dependencies.
       - run: cd starter/backend && pipenv install
