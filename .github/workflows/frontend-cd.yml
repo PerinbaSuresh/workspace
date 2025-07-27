@@ -133,21 +133,15 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           echo "Docker image is pushed into ECR successfully."
 
-      # Check out the code from the repository again
-      - name: Check out repository again
-        uses: actions/checkout@v3
-
       - name: Deploy image to EKS
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: frontend
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          pwd
           cd starter/frontend/k8s && aws eks update-kubeconfig --name cluster
-          pwd
-          cd starter/frontend/k8s && kustomize edit set image frontend=431904867259.dkr.ecr.us-east-1.amazonaws.com/frontend:$IMAGE_TAG
-          cd starter/frontend/k8s && kustomize build | kubectl apply -f -
+          kustomize edit set image frontend=431904867259.dkr.ecr.us-east-1.amazonaws.com/frontend:$IMAGE_TAG
+          kustomize build | kubectl apply -f -
           echo "Docker image is deployed into EKS successfully."
 
       # Send a console message at completion.
