@@ -11,7 +11,7 @@ env:
   # Set Node.js Version
   NODE_VERSION: '18.x'
   AWS_REGION: us-east-1
-  REACT_APP_MOVIE_API_URL: 'http://localhost:5000'
+  REACT_APP_MOVIE_API_URL: 'http://ac7e5e77c25ff4ae18db33ebb4fc17c0-518722986.us-east-1.elb.amazonaws.com'
 
 jobs:
   test:
