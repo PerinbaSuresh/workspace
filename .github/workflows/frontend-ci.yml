@@ -1,0 +1,100 @@
+name: frontend-continuous-integration
+
+# Ensure the workflow runs on manual trigger and on pull request to the main branch
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: 
+      - main
+
+env:
+  # Set Node.js Version
+  NODE_VERSION: '18.x'
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Set up a Node.js environment using the specified node version.
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+          cache: 'npm'
+
+      # Install the dependencies.
+      - run: cd starter/frontend && npm ci
+
+      # Run the tests.
+      - run: cd starter/frontend && npm run test
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed test job."
+
+  lint:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Set up a Node.js environment using the specified node version.
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+          cache: 'npm'
+
+      # Install the dependencies.
+      - run: cd starter/frontend && npm ci
+
+      # Run the linter.
+      - run: cd starter/frontend && npm run lint
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed lint job."
+
+  build:
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Set up a Node.js environment using the specified node version.
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+          cache: 'npm'
+
+      # Install the dependencies.
+      - run: cd starter/frontend && npm ci
+
+      # Run the tests.
+      - run: cd starter/frontend && npm run test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Build docker image
+      - name: Build docker image
+        run: |
+          cd starter/frontend && docker build --build-arg=REACT_APP_MOVIE_API_URL=http://localhost:5000 --tag=mp-frontend:latest .
+          echo "Docker image is buit successfully."   
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed build job."
+        
