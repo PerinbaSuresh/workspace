@@ -1,0 +1,100 @@
+name: backend-continuous-integration
+
+# Ensure the workflow runs on manual trigger and on pull request to the main branch
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: 
+      - main
+
+env:
+  # Set Python Version
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Set up a Python environment using the specified version.
+      - name: Use Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+          cache: 'pip'
+
+      # Install the dependencies.
+      - run: cd starter/backend && pipenv install
+
+      # Run the tests.
+      - run: cd starter/backend && pipenv run test
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed test job."
+
+  lint:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Set up a Python environment using the specified version.
+      - name: Use Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+          cache: 'pip'
+
+      # Install the dependencies.
+      - run: cd starter/backend && pipenv install
+
+      # Run the linter.
+      - run: cd starter/backend && pipenv run lint
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed lint job."
+
+  build:
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Set up a Python environment using the specified version.
+      - name: Use Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+          cache: 'pip'
+
+      # Install the dependencies.
+      - run: cd starter/backend && pipenv install
+
+      # Run the tests.
+      - run: cd starter/backend && pipenv run test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Build docker image
+      - name: Build docker image
+        run: |
+          cd starter/backend && docker build --tag mp-backend:latest .
+          echo "Docker image is buit successfully."   
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed build job."
+        
