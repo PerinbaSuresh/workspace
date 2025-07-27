@@ -1,0 +1,149 @@
+name: frontend-continuous-deployment
+
+# Ensure the workflow runs on manual trigger and on push to the main branch
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - main
+
+env:
+  # Set Node.js Version
+  NODE_VERSION: '18.x'
+  AWS_REGION: us-east-1
+  REACT_APP_MOVIE_API_URL: 'http://localhost:5000'
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Set up a Node.js environment using the specified node version.
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+          cache: 'npm'
+          cache-dependency-path: 'starter/frontend/package-lock.json'
+
+      # Install the dependencies.
+      - run: cd starter/frontend && npm ci
+
+      # Run the tests.
+      - run: cd starter/frontend && npm run test
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed test job."
+
+  lint:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Set up a Node.js environment using the specified node version.
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+          cache: 'npm'
+          cache-dependency-path: 'starter/frontend/package-lock.json'
+
+      # Install the dependencies.
+      - run: cd starter/frontend && npm ci
+
+      # Run the linter.
+      - run: cd starter/frontend && npm run lint -- --fix
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed lint job."
+
+  build:
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Set up a Node.js environment using the specified node version.
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+          cache: 'npm'
+          cache-dependency-path: 'starter/frontend/package-lock.json'
+
+      # Install the dependencies.
+      - run: cd starter/frontend && npm ci
+
+      # Run the tests.
+      - run: cd starter/frontend && npm run test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Build docker image
+      - name: Build docker image
+        run: |
+          cd starter/frontend && docker build --build-arg=REACT_APP_MOVIE_API_URL=${{env.REACT_APP_MOVIE_API_URL}} --tag=mp-frontend:latest .
+          echo "Docker image is built successfully."   
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed build job."
+
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the code from the repository.
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      # Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }} # Use your stored AWS Access Key ID
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }} # Use your stored AWS Secret Access Key
+          aws-region: ${{ env.AWS_REGION }} 
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: frontend
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd starter/frontend && docker build --build-arg=REACT_APP_MOVIE_API_URL=${{env.REACT_APP_MOVIE_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          cd starter/frontend && docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          echo "Docker image is pushed into ECR successfully."
+
+      - name: Deploy image to EKS
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: frontend
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd starter/frontend/k8s && aws eks update-kubeconfig --name cluster
+          cd starter/frontend/k8s && kustomize edit set image frontend=431904867259.dkr.ecr.us-east-1.amazonaws.com/frontend:$IMAGE_TAG
+          cd starter/frontend/k8s && kustomize build | kubectl apply -f -
+          echo "Docker image is deployed into EKS successfully."
+
+      # Send a console message at completion.
+      - run: |
+          echo "Hello ${{github.actor}}. Successfully completed deploy job."
