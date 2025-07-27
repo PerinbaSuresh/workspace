@@ -1,0 +1,5 @@
+Frontend link:
+http://acc73f311f4ae4bbf951dc7270d92c3a-574210613.us-east-1.elb.amazonaws.com/
+
+Backend link:
+http://ac7e5e77c25ff4ae18db33ebb4fc17c0-518722986.us-east-1.elb.amazonaws.com/movies
