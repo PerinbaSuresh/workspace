@@ -134,7 +134,7 @@ jobs:
           echo "Docker image is pushed into ECR successfully."
 
       - name: Set up kubectl
-        uses: azure/setup-kubectl@v2
+        uses: azure/setup-kubectl@v4
         with:
           version: 'latest'
 
